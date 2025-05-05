@@ -1,0 +1,1 @@
+{"flutter":{"platforms":{"android":{"default":{"projectId":"peerconnects","appId":"1:776249895961:android:e02c9c31fe06aee1d20e88","fileOutput":"android/app/google-services.json"}},"dart":{"lib/firebase_options.dart":{"projectId":"peerconnects","configurations":{"android":"1:776249895961:android:e02c9c31fe06aee1d20e88","ios":"1:776249895961:ios:58d8f2dfb3d614b6d20e88"}}}}}}

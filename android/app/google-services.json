@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "776249895961",
+    "project_id": "peerconnects",
+    "storage_bucket": "peerconnects.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:776249895961:android:e02c9c31fe06aee1d20e88",
+        "android_client_info": {
+          "package_name": "com.example.peer_connects"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHBUUyk8IooCXJd2jAQCqdEsK14JjiKu0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
