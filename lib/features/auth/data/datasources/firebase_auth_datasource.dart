@@ -32,7 +32,7 @@ class FirebaseAuthDatasourceImpl implements FirebaseAuthDatasource {
       if (firebaseUser != null) {
         return UserModel.fromFirebase(firebaseUser);
       } else {
-        return UserModel(id: '', email: '', name: '', photoUrl: null);;
+        return UserModel(id: '', email: '', name: '', photoUrl: null);
       }
     });
   }

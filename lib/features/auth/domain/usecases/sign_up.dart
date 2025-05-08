@@ -10,7 +10,6 @@ class SignUp {
     required String password,
     required String name,
   }) async {
-    print('SignUp called with email: $email, password: $password, name: $name');  
     return await repository.signUp(
       email: email,
       password: password,

@@ -121,22 +121,27 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // Achievements
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Achievements',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'See All',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/achievements');
+                  },
+                  child: const Text(
+                    'See All',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -148,30 +153,35 @@ class ProfileScreen extends StatelessWidget {
                 scrollDirection: Axis.horizontal,
                 children: [
                   _buildAchievementItem(
+                    context,
                     'Early Bird',
                     '10 morning walks',
                     Icons.wb_sunny,
                     Colors.orange,
                   ),
                   _buildAchievementItem(
+                    context,
                     'Consistent',
                     '5 days streak',
                     Icons.calendar_today,
                     Colors.blue,
                   ),
                   _buildAchievementItem(
+                    context,
                     'Explorer',
                     '5 different routes',
                     Icons.explore,
                     Colors.purple,
                   ),
                   _buildAchievementItem(
+                    context,
                     'Social',
                     '3 group walks',
                     Icons.group,
                     Colors.green,
                   ),
                   _buildAchievementItem(
+                    context,
                     'Milestone',
                     '100 km walked',
                     Icons.flag,
@@ -220,22 +230,27 @@ class ProfileScreen extends StatelessWidget {
             const SizedBox(height: 24),
             
             // Recent activity
-            const Row(
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
+                const Text(
                   'Recent Activity',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Text(
-                  'See All',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: AppTheme.primaryColor,
-                    fontWeight: FontWeight.bold,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pushNamed(context, '/challenges');
+                  },
+                  child: const Text(
+                    'See All',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -304,49 +319,55 @@ class ProfileScreen extends StatelessWidget {
   }
 
   Widget _buildAchievementItem(
+    BuildContext context,
     String title,
     String description,
     IconData icon,
     Color color,
   ) {
-    return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
+    return GestureDetector(
+      onTap: () {
+        Navigator.pushNamed(context, '/achievements');
+      },
+      child: Container(
+        width: 120,
+        margin: const EdgeInsets.only(right: 12),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
               color: color,
+              size: 28,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            description,
-            style: TextStyle(
-              fontSize: 12,
-              color: color.withOpacity(0.8),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(
+                fontSize: 12,
+                color: color.withOpacity(0.8),
+              ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
       ),
     );
   }
