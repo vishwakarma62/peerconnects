@@ -4,6 +4,7 @@ import 'package:peer_connects/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:peer_connects/features/auth/presentation/bloc/auth_event.dart';
 import 'package:peer_connects/features/gamification/presentation/pages/gamification_home_screen.dart';
 import 'package:peer_connects/features/profile/presentation/pages/profile_screen.dart';
+import 'package:peer_connects/features/walks/presentation/pages/home_tab.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -16,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   
   final List<Widget> _screens = [
-    const _WalksTab(),
+    const HomeTab(),
     const _ExploreTab(),
     const GamificationHomeScreen(),
     const ProfileScreen(),
@@ -52,48 +53,6 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Profile',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _WalksTab extends StatelessWidget {
-  const _WalksTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('My Walks'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications),
-            onPressed: () {
-              // Navigate to notifications
-            },
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('Walks Tab Content'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                context.read<AuthBloc>().add(const AuthSignOutRequested());
-              },
-              child: const Text('Sign Out'),
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Start a new walk
-        },
-        child: const Icon(Icons.add),
       ),
     );
   }
