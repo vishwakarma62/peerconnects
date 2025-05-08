@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:peer_connects/core/services/user_preferences_service.dart';
 import 'package:peer_connects/features/auth/data/models/user_model.dart';
 
 abstract class FirebaseAuthDatasource {
@@ -17,20 +18,27 @@ class FirebaseAuthDatasourceImpl implements FirebaseAuthDatasource {
   final FirebaseAuth _firebaseAuth;
   final FirebaseFirestore _firestore;
   final GoogleSignIn _googleSignIn;
+  final UserPreferencesService _preferencesService;
 
   FirebaseAuthDatasourceImpl({
     FirebaseAuth? firebaseAuth,
     FirebaseFirestore? firestore,
     GoogleSignIn? googleSignIn,
+    UserPreferencesService? preferencesService,
   })  : _firebaseAuth = firebaseAuth ?? FirebaseAuth.instance,
         _firestore = firestore ?? FirebaseFirestore.instance,
-        _googleSignIn = googleSignIn ?? GoogleSignIn();
+        _googleSignIn = googleSignIn ?? GoogleSignIn(),
+        _preferencesService = preferencesService ?? UserPreferencesService();
 
   @override
   Stream<UserModel> get authStateChanges {
     return _firebaseAuth.authStateChanges().map((firebaseUser) {
       if (firebaseUser != null) {
-        return UserModel.fromFirebase(firebaseUser);
+        final userModel = UserModel.fromFirebase(firebaseUser);
+        // Save user to preferences when auth state changes
+        _preferencesService.saveUser(userModel);
+        _preferencesService.setLoggedIn(true);
+        return userModel;
       } else {
         return UserModel(id: '', email: '', name: '', photoUrl: null);
       }
@@ -62,10 +70,17 @@ class FirebaseAuthDatasourceImpl implements FirebaseAuthDatasource {
     required String password,
   }) async {
     try {
-      await _firebaseAuth.signInWithEmailAndPassword(
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      if (userCredential.user != null) {
+        final userModel = UserModel.fromFirebase(userCredential.user!);
+        // Save user data to shared preferences
+        await _preferencesService.saveUser(userModel);
+        await _preferencesService.setLoggedIn(true);
+      }
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message ?? 'Failed to sign in');
     }
@@ -75,46 +90,55 @@ class FirebaseAuthDatasourceImpl implements FirebaseAuthDatasource {
   Future<void> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      
       if (googleUser == null) {
         throw Exception('Google sign in aborted');
       }
-
+      
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
       final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
-
+      
       final userCredential = await _firebaseAuth.signInWithCredential(credential);
-      final user = userCredential.user;
-
-      if (user != null) {
-        // Check if the user exists in Firestore
-        final userDoc = await _firestore.collection('users').doc(user.uid).get();
+      
+      if (userCredential.user != null) {
+        // Check if user exists in Firestore
+        final userDoc = await _firestore
+            .collection('users')
+            .doc(userCredential.user!.uid)
+            .get();
         
         if (!userDoc.exists) {
-          // Create a new user document if it doesn't exist
-          await _firestore.collection('users').doc(user.uid).set({
-            'id': user.uid,
-            'email': user.email,
-            'name': user.displayName,
-            'photoUrl': user.photoURL,
+          // Create user document if it doesn't exist
+          await _firestore.collection('users').doc(userCredential.user!.uid).set({
+            'email': userCredential.user!.email,
+            'name': userCredential.user!.displayName,
+            'photoUrl': userCredential.user!.photoURL,
             'createdAt': FieldValue.serverTimestamp(),
           });
         }
+        
+        final userModel = UserModel.fromFirebase(userCredential.user!);
+        // Save user data to shared preferences
+        await _preferencesService.saveUser(userModel);
+        await _preferencesService.setLoggedIn(true);
       }
+    } on FirebaseAuthException catch (e) {
+      throw Exception(e.message ?? 'Failed to sign in with Google');
     } catch (e) {
-      throw Exception('Failed to sign in with Google: ${e.toString()}');
+      throw Exception('Failed to sign in with Google: $e');
     }
   }
 
   @override
   Future<void> signOut() async {
     try {
-      await Future.wait([
-        _firebaseAuth.signOut(),
-        _googleSignIn.signOut(),
-      ]);
+      await _googleSignIn.signOut();
+      await _firebaseAuth.signOut();
+      // Clear user data from shared preferences
+      await _preferencesService.clearUserData();
     } catch (e) {
       throw Exception('Failed to sign out');
     }
@@ -132,19 +156,28 @@ class FirebaseAuthDatasourceImpl implements FirebaseAuthDatasource {
         password: password,
       );
       
-      final user = userCredential.user;
-      if (user != null) {
+      if (userCredential.user != null) {
         // Update display name
-        await user.updateDisplayName(name);
+        await userCredential.user!.updateDisplayName(name);
         
         // Create user document in Firestore
-        await _firestore.collection('users').doc(user.uid).set({
-          'id': user.uid,
+        await _firestore.collection('users').doc(userCredential.user!.uid).set({
           'email': email,
           'name': name,
           'photoUrl': null,
           'createdAt': FieldValue.serverTimestamp(),
         });
+        
+        final userModel = UserModel(
+          id: userCredential.user!.uid,
+          email: email,
+          name: name,
+          photoUrl: null,
+        );
+        
+        // Save user data to shared preferences
+        await _preferencesService.saveUser(userModel);
+        await _preferencesService.setLoggedIn(true);
       }
     } on FirebaseAuthException catch (e) {
       throw Exception(e.message ?? 'Failed to sign up');

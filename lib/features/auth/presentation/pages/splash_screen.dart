@@ -1,43 +1,59 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:peer_connects/config/theme.dart';
+import 'package:peer_connects/core/services/user_preferences_service.dart';
 import 'package:peer_connects/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:peer_connects/features/auth/presentation/bloc/auth_state.dart';
 import 'package:peer_connects/features/auth/presentation/pages/welcome_screen.dart';
 import 'package:peer_connects/features/walks/presentation/pages/home_screen.dart';
+import 'package:peer_connects/core/di/injection_container.dart' as di;
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
-
+  
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  final UserPreferencesService _preferencesService = di.sl<UserPreferencesService>();
+  bool _isCheckingAuth = true;
+  
   @override
   void initState() {
     super.initState();
     _navigateToNextScreen();
   }
-
+  
   _navigateToNextScreen() async {
+    // First check shared preferences for faster startup
+    final isLoggedIn = await _preferencesService.isLoggedIn();
+    
+    // Wait for minimum splash screen time
     await Future.delayed(const Duration(seconds: 2));
-    if (mounted) {
-      final authState = context.read<AuthBloc>().state;
-      
-      if (authState.isAuthenticated) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => const HomeScreen(),
-          ),
-        );
-      } else {
-        Navigator.of(context).pushReplacement(
+    
+    if (!mounted) return;
+    
+    if (isLoggedIn) {
+      // If logged in according to preferences, navigate to home screen
+      // The AuthBloc will still verify with Firebase in the background
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (context) => const HomeScreen(),
+        ),
+      );
+    } else {
+              Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const WelcomeScreen(),
           ),
         );
-      }
+      
+      // If not logged in, wait for AuthBloc to confirm
+      setState(() {
+        _isCheckingAuth = false;
+      });
+      
     }
   }
 
@@ -45,12 +61,22 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
-        if (state.isAuthenticated) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
-          );
+        print('Auth state changed: $state');
+        // Only handle navigation if we haven't already navigated based on preferences
+        if (!_isCheckingAuth) {
+          if (state.isAuthenticated) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const HomeScreen(),
+              ),
+            );
+          } else if (state.isUnauthenticated) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const WelcomeScreen(),
+              ),
+            );
+          }
         }
       },
       child: Scaffold(

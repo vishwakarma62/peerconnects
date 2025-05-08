@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:get_it/get_it.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:peer_connects/core/services/user_preferences_service.dart';
 import 'package:peer_connects/features/auth/data/datasources/firebase_auth_datasource.dart';
 import 'package:peer_connects/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:peer_connects/features/auth/domain/repositories/auth_repository.dart';
@@ -17,25 +18,29 @@ import 'package:peer_connects/features/auth/presentation/bloc/auth_bloc.dart';
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Services
+  sl.registerLazySingleton(() => UserPreferencesService());
+  
   // Firebase
   sl.registerLazySingleton(() => FirebaseAuth.instance);
   sl.registerLazySingleton(() => FirebaseFirestore.instance);
   sl.registerLazySingleton(() => GoogleSignIn());
-
+  
   // Data sources
   sl.registerLazySingleton<FirebaseAuthDatasource>(
     () => FirebaseAuthDatasourceImpl(
       firebaseAuth: sl(),
       firestore: sl(),
       googleSignIn: sl(),
+      preferencesService: sl(),
     ),
   );
-
+  
   // Repositories
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(sl()),
   );
-
+  
   // Use cases
   sl.registerLazySingleton(() => GetAuthStatus(sl()));
   sl.registerLazySingleton(() => GetCurrentUser(sl()));
@@ -44,7 +49,7 @@ Future<void> init() async {
   sl.registerLazySingleton(() => SignOut(sl()));
   sl.registerLazySingleton(() => SignUp(sl()));
   sl.registerLazySingleton(() => ResetPassword(sl()));
-
+  
   // BLoCs
   sl.registerFactory(
     () => AuthBloc(

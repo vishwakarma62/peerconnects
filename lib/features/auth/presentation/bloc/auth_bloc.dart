@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:peer_connects/features/auth/domain/entities/user_entity.dart';
 import 'package:peer_connects/features/auth/domain/usecases/get_auth_status.dart';
 import 'package:peer_connects/features/auth/domain/usecases/reset_password.dart';
 import 'package:peer_connects/features/auth/domain/usecases/sign_in_with_email_and_password.dart';
@@ -49,8 +50,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     _authStatusSubscription?.cancel();
     _authStatusSubscription = _getAuthStatus().listen(
       (user) {
-        if (user.isAnonymous) {
-          add(const AuthSignOutRequested());
+        if (user == UserEntity.empty) {
+          emit(const AuthState.unauthenticated());
         } else {
           emit(AuthState.authenticated(user));
         }
@@ -68,6 +69,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         password: event.password,
         name: event.name,
       );
+      // Auth state will be updated by the stream
     } catch (e) {
       emit(AuthState.unauthenticated(e.toString()));
     }
@@ -82,6 +84,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         email: event.email,
         password: event.password,
       );
+      // Auth state will be updated by the stream
     } catch (e) {
       emit(AuthState.unauthenticated(e.toString()));
     }
@@ -93,6 +96,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       await _signInWithGoogle();
+      // Auth state will be updated by the stream
     } catch (e) {
       emit(AuthState.unauthenticated(e.toString()));
     }
@@ -104,7 +108,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       await _signOut();
-      emit(const AuthState.unauthenticated());
+      // Auth state will be updated by the stream
     } catch (e) {
       emit(AuthState.unauthenticated(e.toString()));
     }
